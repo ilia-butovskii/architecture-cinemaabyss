@@ -3,7 +3,7 @@ const httpProxy = require('http-proxy');
 
 const MONOLITH_URL = process.env.MONOLITH_URL;
 const MOVIES_SERVICE_URL = process.env.MOVIES_SERVICE_URL;
-const FEATURE_ENABLED = process.env.GRADUAL_MIGRATION;
+const FEATURE_ENABLED = process.env.GRADUAL_MIGRATION === "true";
 const MOVIES_MIGRATION_PERCENT = process.env.MOVIES_MIGRATION_PERCENT;
 
 
@@ -13,8 +13,6 @@ const config = [
         target: MOVIES_SERVICE_URL
     }
 ]
-
-
 
 const proxy = httpProxy.createProxyServer();
 
@@ -28,8 +26,13 @@ server.listen(process.env.PORT, () => {
 });
 
 function getTarget(req) {
+    const shouldUseFeature = isTestGroup() && FEATURE_ENABLED;
     const path = req.url;
     const target = config.find(c => path.startsWith(c.startsWith));
 
-    return target && FEATURE_ENABLED ? target.target : MONOLITH_URL;
+    return target && shouldUseFeature ? target.target : MONOLITH_URL;
+}
+
+function isTestGroup() {
+    return Math.random() < MOVIES_MIGRATION_PERCENT / 100;
 }
