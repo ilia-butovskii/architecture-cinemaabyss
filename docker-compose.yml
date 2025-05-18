@@ -49,7 +49,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - cinemaabyss-network
-
+    healthcheck:
+      test: nc -z localhost 9092
+      interval: 1s
+      timeout: 60s
+      retries: 60
   # Monolith Service
   monolith:
     build:
@@ -57,7 +61,8 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-monolith
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -73,7 +78,8 @@ services:
       dockerfile: Dockerfile
     container_name: cinemaabyss-movies-service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
@@ -83,21 +89,23 @@ services:
       - cinemaabyss-network
 
   # Events Microservice
-  # events-service:
-  #   build:
-  #     context: ./src/microservices/events
-  #     dockerfile: Dockerfile
-  #   container_name: cinemaabyss-events-service
-  #   depends_on:
-  #     - postgres
-  #     - kafka
-  #   ports:
-  #     - "8082:8082"
-  #   environment:
-  #     PORT: 8082
-  #     KAFKA_BROKERS: kafka:9092
-  #   networks:
-  #     - cinemaabyss-network
+  events-service:
+    build:
+      context: ./src/microservices/events
+      dockerfile: Dockerfile
+    container_name: cinemaabyss-events-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      PORT: 8082
+      KAFKA_BROKERS: kafka:9092
+    networks:
+      - cinemaabyss-network
 
   # Proxy Service (API Gateway)
   proxy-service:
@@ -108,7 +116,7 @@ services:
     depends_on:
       - monolith
       - movies-service
-      # - events-service
+      - events-service
     ports:
       - "8000:8000"
     environment:
@@ -126,7 +134,8 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: cinemaabyss-kafka-ui
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     ports:
       - "8090:8080"
     environment:

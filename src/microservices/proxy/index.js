@@ -10,7 +10,7 @@ const MOVIES_MIGRATION_PERCENT = process.env.MOVIES_MIGRATION_PERCENT;
 const config = [
     {
         startsWith: "/api/movies",
-        target: MOVIES_SERVICE_URL
+        target: MOVIES_SERVICE_URL,
     }
 ]
 
@@ -30,7 +30,11 @@ function getTarget(req) {
     const path = req.url;
     const target = config.find(c => path.startsWith(c.startsWith));
 
-    return target && shouldUseFeature ? target.target : MONOLITH_URL;
+    if(!target || !shouldUseFeature) {
+        return MONOLITH_URL;
+    }
+
+    return target.target;
 }
 
 function isTestGroup() {
