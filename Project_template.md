@@ -320,6 +320,18 @@ minikube tunnel
 
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и скриншот вывода event-service после вызова тестов.
 
+## Tests
+
+![tests](./resources/task3_tests_results.png)
+
+## Movies
+
+![movies](./resources/task3_logs_movies.png)
+
+## Events
+
+![events](./resources/task3_events.png)
+
 # Задание 4
 
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу
