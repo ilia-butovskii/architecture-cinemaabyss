@@ -1,0 +1,84 @@
+@startuml
+title CinemaAbyss Container Diagram
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(customer, "Customer", "A user of CinemaAbyss")
+Person(administrator, "Administrator", "An administrator of CinemaAbyss")
+System_Ext(StreamingServices, "Streaming Services", "External services for streaming movies")
+System_Ext(S3, "Amazon S3", "Stores files")
+System_Ext(ExternalPaymentSystem, "External Payment System", "External system for payments")
+System_Ext(ExternalRecommendationSystem, "External Recommendation System", "External system for recommendations")
+
+Container_Boundary(cinema_abyss, "CinemaAbyss", "CinemaAbyss"){
+    Container(WebClient, "WebClient", "React", "Allows users to watch movies and manage their profile")
+    Container(MobileClient, "MobileClient", "React Native", "Allows users to watch movies and manage their profile")
+    Container(TVApp, "TVApp", "React Native", "Allows users to watch movies")
+    Container(APIGateway, "APIGateway", "Kong", "Auth and routing")
+    Container(CustomerService, "CustomerService", "NodeJS", "Manages customer data")
+    ContainerDb(CustomerDB, "CustomerDB", "PostgreSQL", "Stores customer data")
+    Container(MovieService, "MovieService", "NodeJS", "Manages movie data")
+    Container(MovieDB, "MovieDB", "PostgreSQL", "Stores movie data")
+    Container(PaymentService, "PaymentService", "NodeJS", "Manages payment data")
+    ContainerDb(PaymentDB, "PaymentDB", "PostgreSQL", "Stores payment data")
+    Container(SubscriptionService, "SubscriptionService", "NodeJS", "Manages subscriptions and payment schedules")
+    ContainerQueue(PaymentQueue, "PaymentQueue", "Kafka", "Manages payment queue")
+    Container(UploadService, "UploadService", "NodeJS", "Manages file uploads")
+    ContainerDb(FilesDB, "FilesDB", "PostgreSQL", "Stores files data")
+    Container(TrackingService, "TrackingService", "NodeJS", "Put user events to Kafka")
+    ContainerQueue(TrackingQueue, "TrackingQueue", "Kafka", "Manages tracking queue")
+    Container(AnalyticsService, "AnalyticsService", "NodeJS", "Handles analytics data and writes to ClickHouse")
+    Container(AnalyticsDataService, "AnalyticsDataService", "NodeJS", "Reads and aggregates analytics data from ClickHouse")
+    ContainerDb(AnalyticsDB, "AnalyticsDB", "ClickHouse", "Stores analytics data")
+    Container(RecommendationService, "RecommendationService", "NodeJS", "Generates personalized movie recommendations")
+    ContainerDb(RecommendationDB, "RecommendationDB", "PostgreSQL", "Stores recommendation data")
+    ContainerQueue(RecommendationQueue, "RecommendationQueue", "RabbitMQ", "Manages recommendation queue")
+}
+
+Rel(customer, WebClient, "uses")
+Rel(customer, MobileClient, "uses")
+Rel(customer, TVApp, "uses")
+
+Rel(administrator, WebClient, "uses")
+
+Rel(WebClient, APIGateway, "Sends requests to the API Gateway")
+Rel(MobileClient, APIGateway, "Sends requests to the API Gateway")
+Rel(TVApp, APIGateway, "Sends requests to the API Gateway")
+
+Rel(APIGateway, CustomerService, "Uses for handling customer data")
+Rel(APIGateway, MovieService, "Uses for meta and player data")
+Rel(APIGateway, PaymentService, "Uses for handling subscriptions and payments")
+Rel(APIGateway, TrackingService, "Uses for tracking user behavior and preferences")
+Rel(APIGateway, RecommendationService, "Uses for getting personalized movie recommendations")
+Rel(APIGateway, UploadService, "Uses for uploading files")
+
+Rel(CustomerService, CustomerDB, "Uses for reading and writing customer data")
+Rel(CustomerService, StreamingServices, "Uses for streaming movies")
+
+Rel(MovieService, MovieDB, "Reads and writes movie data")
+Rel(MovieService, StreamingServices, "Uses for getting player and movie meta data")
+
+Rel(PaymentService, PaymentDB, "Reads and writes payment data")
+Rel(PaymentService, PaymentQueue, "Consumes for charging")
+Rel(SubscriptionService, PaymentQueue, "Produces for charging")
+Rel(PaymentService, SubscriptionService, "Uses for subscription initialization")
+Rel(SubscriptionService, PaymentDB, "Reads and writes subscription data")
+Rel(PaymentService, ExternalPaymentSystem, "Uses for charging")
+
+Rel(TrackingService, TrackingQueue, "Produces user events to Kafka")
+Rel(AnalyticsService, TrackingQueue, "Consumes user events from Kafka")
+Rel(AnalyticsService, AnalyticsDB, "Writes analytics data")
+Rel(AnalyticsDataService, AnalyticsDB, "Reads analytics data from ClickHouse")
+
+Rel(RecommendationService, RecommendationDB, "Cache recommendation data")
+Rel(RecommendationService, AnalyticsDataService, "Reads analytics data from ClickHouse")
+Rel(RecommendationService, RecommendationQueue, "Consumes recommendation data from queue")
+Rel(ExternalRecommendationSystem, RecommendationQueue, "Produces recommendation data to queue")
+
+Rel(UploadService, FilesDB, "Reads and writes file data")
+Rel(UploadService, S3, "Uploads files to S3")
+
+
+
+
+@enduml
