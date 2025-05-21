@@ -411,6 +411,8 @@ minikube tunnel
 Потом вызовите
 https://cinemaabyss.example.com/api/movies и приложите скриншот
 
+![task4](./resources/task4_result.png)
+
 ## Удаляем все
 
 Установите https://istio.io/latest/docs/reference/commands/istioctl/

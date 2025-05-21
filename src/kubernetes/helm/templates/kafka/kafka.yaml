@@ -164,6 +164,8 @@ spec:
         resources:
           {{- toYaml .Values.kafka.resources | nindent 10 }}
         env:
+        - name: KAFKA_HEAP_OPTS
+          value: "-Xms512m -Xmx512m"
         - name: KAFKA_ADVERTISED_LISTENERS
           value: PLAINTEXT://kafka:9092
         - name: KAFKA_LISTENERS
